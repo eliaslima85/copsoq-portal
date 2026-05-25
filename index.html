@@ -574,7 +574,7 @@ function showStep2(co){
 
 function openForms(sector){
   if(!currentCo) return;
-  const url = buildFormsUrl(currentCo.code, sector);
+  const url = buildFormsUrl(currentCo.name||currentCo.code, sector);
   window.open(url, '_blank');
 }
 
