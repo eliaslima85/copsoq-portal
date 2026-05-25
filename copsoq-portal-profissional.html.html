@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>COPSOQ II — Questionário de Saúde Ocupacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --navy:#0A1628;--navy2:#112240;--purple:#6B46C1;--purple2:#7C3AED;
+  --purple-pale:#F3E8FF;--teal:#00C9A7;--teal2:#00A68A;
+  --red:#EF4444;--green:#10B981;--amber:#D97706;
+  --slate:#64748B;--slate2:#94A3B8;--border:#E2E8F0;
+  --off:#F8FAFC;--text:#0F172A;--sub:#475569;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);min-height:100vh;color:var(--text);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 10% 20%,rgba(107,70,193,.25) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 90% 80%,rgba(0,201,167,.15) 0%,transparent 60%);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:1.5rem 1rem 3rem}
+
+/* Badge */
+.badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:6px 16px 6px 8px;margin-bottom:1.5rem;backdrop-filter:blur(10px)}
+.badge-dot{width:8px;height:8px;background:var(--teal);border-radius:50%;box-shadow:0 0 8px var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+.badge span{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.1em;text-transform:uppercase}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:2rem;animation:up .5s ease both}
+.hero-logo{display:inline-flex;align-items:center;justify-content:center;width:60px;height:60px;background:linear-gradient(135deg,var(--purple),var(--purple2));border-radius:16px;margin-bottom:1rem;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 16px 32px rgba(107,70,193,.4)}
+.hero-logo svg{width:30px;height:30px;stroke:white}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);font-weight:800;color:white;line-height:1.1;letter-spacing:-.02em;margin-bottom:.4rem}
+.hero h1 span{background:linear-gradient(135deg,var(--teal),var(--purple2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.05em;text-transform:uppercase}
+
+/* Card */
+.card{width:100%;max-width:480px;background:rgba(255,255,255,.97);border-radius:24px;box-shadow:0 0 0 1px rgba(0,0,0,.06),0 32px 64px rgba(0,0,0,.3);overflow:hidden;animation:up .5s ease .1s both}
+.card-body{padding:1.75rem 1.75rem 2rem}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* Info box */
+.info-box{background:var(--purple-pale);border:1.5px solid rgba(107,70,193,.15);border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;gap:.875rem;align-items:flex-start}
+.info-icon{width:38px;height:38px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 16px rgba(107,70,193,.3)}
+.info-icon svg{width:18px;height:18px;stroke:white}
+.info-text h3{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--navy);margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em}
+.info-text p{font-size:11px;color:var(--sub);line-height:1.5}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem}
+.stat{background:var(--off);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center}
+.stat-v{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--purple);display:block}
+.stat-l{font-size:9px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.08em;display:block}
+
+/* Divider */
+.div{display:flex;align-items:center;gap:10px;margin:1.1rem 0}
+.div::before,.div::after{content:'';flex:1;height:1px;background:var(--border)}
+.div span{font-size:10px;font-weight:700;color:var(--slate2);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+
+/* Input */
+.lbl{display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.inp-wrap{position:relative;margin-bottom:12px}
+.inp-wrap input{width:100%;padding:13px 44px 13px 14px;border:2px solid var(--border);border-radius:12px;font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--text);background:white;outline:none;transition:border-color .2s,box-shadow .2s;letter-spacing:.08em;text-transform:uppercase}
+.inp-wrap input::placeholder{color:var(--slate2);font-weight:400;font-size:14px;letter-spacing:.03em;text-transform:none}
+.inp-wrap input:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(107,70,193,.1)}
+.inp-icon{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--slate2)}
+.inp-icon svg{width:17px;height:17px}
+
+/* Buttons */
+.btn-purple{width:100%;padding:14px;background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 6px 20px rgba(107,70,193,.35);display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-purple:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(107,70,193,.45)}
+.btn-purple:disabled{opacity:.6;pointer-events:none}
+.btn-ghost{width:100%;padding:11px;background:transparent;color:var(--sub);border:1.5px solid var(--border);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .15s;margin-top:8px}
+.btn-ghost:hover{background:var(--off)}
+
+/* Error */
+.err{background:#FFF1F1;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:600;color:#991B1B;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.err svg{width:15px;height:15px;flex-shrink:0}
+.hidden{display:none!important}
+
+/* Spinner */
+.spin{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:rot .7s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* Company box */
+.company-box{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.company-box-icon{width:42px;height:42px;background:rgba(255,255,255,.1);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.company-box-icon svg{width:21px;height:21px;stroke:white}
+.company-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:white;letter-spacing:-.01em}
+.company-code{font-size:11px;color:var(--teal);font-weight:600;margin-top:2px}
+
+.period-chip{display:inline-flex;align-items:center;gap:6px;background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:#92400E;margin-bottom:14px}
+.period-chip svg{width:11px;height:11px}
+
+.sector-lbl{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;display:block}
+
+.sector-btn{width:100%;padding:15px 18px;background:white;border:2px solid var(--border);border-radius:13px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between;transition:all .18s;margin-bottom:8px}
+.sector-btn:hover,.sector-btn:focus{border-color:var(--purple);background:var(--purple-pale);color:var(--purple);outline:none;transform:translateX(3px)}
+.sector-btn svg{width:18px;height:18px;stroke:var(--slate2);flex-shrink:0;transition:stroke .18s}
+.sector-btn:hover svg,.sector-btn:focus svg{stroke:var(--purple)}
+
+.no-sector-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--teal2),var(--teal));color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 20px rgba(0,166,138,.35)}
+
+/* Info buttons */
+.info-btns{display:flex;gap:7px;margin-top:1.1rem}
+.info-btn{flex:1;padding:10px 6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:rgba(255,255,255,.65);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;backdrop-filter:blur(10px)}
+.info-btn:hover{background:rgba(255,255,255,.1);color:white}
+.info-btn svg{width:13px;height:13px}
+
+/* Modals */
+.modal{display:none;position:fixed;inset:0;background:rgba(10,22,40,.92);backdrop-filter:blur(12px);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal.open{display:flex;animation:fin .2s ease}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+.modal-box{background:white;border-radius:24px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 64px rgba(0,0,0,.5);animation:scl .22s ease}
+@keyframes scl{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-hd{position:sticky;top:0;background:white;border-bottom:1px solid var(--border);padding:1.1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;border-radius:24px 24px 0 0;z-index:1}
+.modal-hd-l{display:flex;align-items:center;gap:11px}
+.modal-hd-ico{width:38px;height:38px;background:var(--purple);border-radius:11px;display:flex;align-items:center;justify-content:center}
+.modal-hd-ico svg{width:18px;height:18px;stroke:white}
+.modal-hd h2{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.05em}
+.modal-hd p{font-size:11px;color:var(--slate);margin-top:1px}
+.modal-x{width:34px;height:34px;border-radius:50%;border:none;background:var(--off);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--slate)}
+.modal-x svg{width:15px;height:15px}
+.modal-bd{padding:1.4rem}
+.modal-ft{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;justify-content:center}
+.modal-close-btn{padding:11px 28px;background:var(--navy);color:white;border:none;border-radius:11px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;cursor:pointer}
+
+/* Admin */
+.adm-ov{position:fixed;inset:0;background:rgba(10,22,40,.97);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:1.5rem 1rem;overflow-y:auto}
+.adm-ov.open{display:flex;animation:fin .2s ease}
+.adm-box{background:white;border-radius:20px;width:100%;max-width:700px;box-shadow:0 32px 64px rgba(0,0,0,.5);margin-bottom:2rem;animation:scl .22s ease}
+.adm-hd{background:linear-gradient(135deg,var(--purple),var(--purple2));color:white;padding:1.4rem;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between}
+.adm-hd h2{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.adm-x{width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;transition:all .15s}
+.adm-x:hover{background:rgba(255,255,255,.3)}
+.adm-x svg{width:14px;height:14px}
+.adm-bd{padding:1.4rem}
+.adm-err{background:#FFF1F1;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:600;color:#991B1B;margin-bottom:12px;display:none}
+.adm-tabs{display:flex;gap:8px;margin-bottom:1.4rem;border-bottom:1px solid var(--border);padding-bottom:0.8rem}
+.adm-tab-btn{padding:10px 16px;background:none;border:none;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--slate2);text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-.8rem;transition:all .15s}
+.adm-tab-btn.on{color:var(--purple);border-bottom-color:var(--purple)}
+.adm-tab-ct{display:none}
+.adm-tab-ct.on{display:block}
+
+.adm-form-gp{margin-bottom:1.2rem}
+.adm-lbl{display:block;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px}
+.adm-inp{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
+.adm-inp:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(107,70,193,.1)}
+.adm-btn{padding:11px 18px;background:var(--purple);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:all .15s}
+.adm-btn:hover{background:var(--purple2);transform:translateY(-1px)}
+
+.qr-prev-box{background:var(--off);border:1.5px solid var(--border);border-radius:16px;padding:1.2rem;text-align:center}
+.qr-prev-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px}
+.qr-prev-code{font-size:11px;color:var(--slate);font-weight:600;margin-bottom:12px}
+.qr-prev-period{font-size:10px;color:var(--slate2);font-weight:500}
+#qr-display{display:flex;justify-content:center;margin:12px 0}
+
+.link-prev-box{margin-top:1rem;padding:12px;background:#EBF0FF;border:1.5px solid #93C5FD;border-radius:10px;text-align:center}
+.link-prev-box p{font-size:10px;color:var(--slate);margin-bottom:6px}
+#link-prev-url{color:var(--purple);font-weight:600;font-size:12px;text-decoration:none;word-break:break-all;display:block}
+
+.adm-dl-btns{display:flex;gap:8px;margin-top:1.2rem}
+.adm-dl-btn{flex:1;padding:10px;background:var(--purple);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:all .15s}
+.adm-dl-btn:hover{background:var(--purple2);transform:translateY(-1px)}
+
+.banner{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:100px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;z-index:300;animation:toast .3s ease}
+.banner.ok{background:var(--green);color:white;box-shadow:0 6px 20px rgba(16,185,129,.35)}
+.banner.err{background:var(--red);color:white;box-shadow:0 6px 20px rgba(239,68,68,.35)}
+@keyframes toast{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="badge">
+      <div class="badge-dot"></div>
+      <span>COPSOQ II — Saúde Ocupacional</span>
+    </div>
+    <div class="hero-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v20M2 12h20"/>
+        <circle cx="12" cy="12" r="10"/>
+      </svg>
+    </div>
+    <h1>COPSOQ <span>II</span></h1>
+    <p>Questionário de Saúde Ocupacional — 41 Itens</p>
+  </div>
+
+  <!-- Card User -->
+  <div class="card" id="s1">
+    <div class="card-body">
+      <div class="info-box">
+        <div class="info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </div>
+        <div class="info-text">
+          <h3>Como participar</h3>
+          <p>Insira o código fornecido pela sua empresa para acessar o questionário.</p>
+        </div>
+      </div>
+
+      <div class="err hidden" id="err-box">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+        <span id="err-txt"></span>
+      </div>
+
+      <label class="lbl">Código de Acesso</label>
+      <div class="inp-wrap">
+        <input type="text" id="code-inp" placeholder="Digite o código fornecido" maxlength="20"/>
+        <div class="inp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 2H3a1 1 0 0 0-1 1v18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/>
+            <path d="M16.475 5.353l2.897 2.897a.5.5 0 0 0 .707 0l5.657-5.657M9 12h.01M13 16h.01"/>
+          </svg>
+        </div>
+      </div>
+
+      <button class="btn-purple" id="val-btn" onclick="doValidate()">
+        <span class="spin hidden" id="btn-spin"></span>
+        <span id="btn-lbl">Validar e Acessar</span>
+      </button>
+
+      <button class="btn-ghost" onclick="openAdmin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+          <path d="M19.071 19.071c1.489-1.489 2.929-4.272 2.929-7.071 0-4.411-3.589-8-8-8s-8 3.589-8 8c0 2.799 1.44 5.582 2.929 7.071"/>
+        </svg>
+        Admin
+      </button>
+
+      <div class="info-btns" style="margin-top:1.5rem">
+        <button class="info-btn" onclick="openModal('steps-modal')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          Como Funciona
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Step 2 (Sectors) -->
+  <div class="card" id="s2" style="display:none">
+    <div class="card-body">
+      <div class="company-box">
+        <div class="company-box-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <div>
+          <div class="company-name" id="co-name">EMPRESA</div>
+          <div class="company-code" id="co-code">Código: —</div>
+        </div>
+      </div>
+
+      <div class="period-chip hidden" id="period-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span id="period-txt"></span>
+      </div>
+
+      <span class="sector-lbl hidden" id="sec-lbl">Selecione seu setor:</span>
+      <div id="sec-btns"></div>
+      <div id="no-sec-msg" style="text-align:center;padding:2rem;color:var(--slate2);font-size:13px">
+        Nenhum setor configurado. Contate o administrador.
+      </div>
+
+      <button class="btn-ghost" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"/>
+          <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Voltar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Steps -->
+<div class="modal" id="steps-modal">
+  <div class="modal-box">
+    <div class="modal-hd">
+      <div class="modal-hd-l">
+        <div class="modal-hd-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"/>
+          </svg>
+        </div>
+        <div>
+          <h2>Como Funciona</h2>
+          <p>Entenda o processo em 5 passos</p>
+        </div>
+      </div>
+      <button class="modal-x" onclick="closeModal('steps-modal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-bd" id="steps-wrap"></div>
+    <div class="modal-ft">
+      <button class="modal-close-btn" onclick="closeModal('steps-modal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Overlay -->
+<div class="adm-ov" id="adm-ov">
+  <div class="adm-box">
+    <div id="adm-login">
+      <div class="adm-hd">
+        <h2>🔐 Acesso Administrativo</h2>
+        <button class="adm-x" onclick="closeAdmin()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="adm-bd">
+        <div class="adm-err" id="adm-err">Senha incorreta. Tente novamente.</div>
+        <div class="adm-form-gp">
+          <label class="adm-lbl">Senha Administrativa</label>
+          <input class="adm-inp" type="password" id="adm-pass" placeholder="Digite sua senha" onkeydown="if(event.key==='Enter') adminLogin()"/>
+        </div>
+        <button class="adm-btn" onclick="adminLogin()" style="width:100%;padding:12px">Acessar</button>
+      </div>
+    </div>
+
+    <div id="adm-panel" class="hidden">
+      <div class="adm-hd">
+        <h2>⚙️ Painel Administrativo</h2>
+        <button class="adm-x" onclick="adminLogout()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="adm-bd">
+        <div class="adm-tabs">
+          <button class="adm-tab-btn on" onclick="switchTab('qr')">Gerar QR Code</button>
+          <button class="adm-tab-btn" onclick="switchTab('sec')">Setores</button>
+          <button class="adm-tab-btn" onclick="switchTab('co')">Empresas</button>
+        </div>
+
+        <!-- TAB QR CODE -->
+        <div class="adm-tab-ct on" id="tab-qr">
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Código da Empresa</label>
+            <input class="adm-inp" type="text" id="qr-code" placeholder="Ex: ABC123" oninput="updateQR()"/>
+          </div>
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Nome da Empresa</label>
+            <input class="adm-inp" type="text" id="qr-name" placeholder="Ex: Empresa XYZ" oninput="updateQR()"/>
+          </div>
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Início da Coleta</label>
+            <input class="adm-inp" type="date" id="qr-start" oninput="updateQR()"/>
+          </div>
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Fim da Coleta</label>
+            <input class="adm-inp" type="date" id="qr-end" oninput="updateQR()"/>
+          </div>
+
+          <div class="qr-prev-box">
+            <div class="qr-prev-name" id="qr-prev-name"></div>
+            <div class="qr-prev-code" id="qr-prev-code"></div>
+            <div class="qr-prev-period hidden" id="qr-prev-period"></div>
+            <div id="qr-display"></div>
+            <div class="link-prev-box hidden" id="link-prev-box">
+              <p>Link clicável:</p>
+              <a href="#" id="link-prev-url" target="_blank"></a>
+            </div>
+          </div>
+
+          <div class="adm-dl-btns">
+            <button class="adm-dl-btn" onclick="downloadPNG()">📥 Download PNG</button>
+            <button class="adm-dl-btn" onclick="downloadPDF()">📥 Download PDF</button>
+          </div>
+        </div>
+
+        <!-- TAB SETORES -->
+        <div class="adm-tab-ct" id="tab-sec">
+          <p style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Selecione a Empresa</p>
+          <div class="adm-form-gp">
+            <select class="adm-inp" id="sec-co-sel" onchange="loadSecCompany()" style="height:45px">
+              <option value="">Selecione a empresa...</option>
+            </select>
+          </div>
+
+          <div id="sec-panel" style="display:none">
+            <p style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Empresa: <span id="sec-co-lbl"></span></p>
+            <div id="sec-list" style="margin-bottom:14px"></div>
+
+            <div class="adm-form-gp">
+              <label class="adm-lbl">Adicionar Setor</label>
+              <div style="display:flex;gap:8px">
+                <input class="adm-inp" type="text" id="new-sec" placeholder="Ex: Produção" style="flex:1"/>
+                <button class="adm-btn" onclick="addSector()" style="flex-shrink:0;padding:11px 14px">+</button>
+              </div>
+            </div>
+
+            <button class="adm-btn" onclick="saveSectors()" style="width:100%;padding:11px;margin-bottom:8px">✓ Salvar Setores</button>
+            <button class="adm-btn" onclick="clearSectors()" style="width:100%;padding:11px;background:var(--red)">Limpar Tudo</button>
+          </div>
+
+          <div id="sec-empty-msg" style="text-align:center;padding:2rem;color:var(--slate2);font-size:13px">Selecione uma empresa acima.</div>
+        </div>
+
+        <!-- TAB EMPRESAS -->
+        <div class="adm-tab-ct" id="tab-co">
+          <p style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Códigos na Planilha</p>
+          <div id="co-list-wrap">
+            <div style="background:#EEF2FF;border:1.5px solid #C7D2FE;border-radius:10px;padding:11px 13px;font-size:12px;color:#3730A3">Carregando...</div>
+          </div>
+        </div>
+
+        <button class="adm-btn" onclick="adminLogout()" style="width:100%;padding:12px;margin-top:1.4rem;background:var(--slate)">Sair</button>
+      </div>
+    </div>
+
+    <div id="adm-logout" class="hidden">
+      <button class="adm-btn" onclick="adminLogout()" style="width:100%;padding:12px;margin-top:1.4rem">Sair do Admin</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="dl-canvas" style="display:none"></canvas>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1SO_sz_Pw8zpyebuLrRBCGyyJ1Syr_hrRhBIEI2rlGmM/export?format=csv&gid=1502619663";
+const FORMS_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdaXECEGnJ5QffHIoB3nGj1a0NuYHloAb-65oQrJYemcPdM5Q/viewform";
+const ADM_PASS  = "ellsf@151281035900!@#$%rebecabela503<>:^?`}{<<<<\"$&¨%@";
+const DB_KEY    = "copsoq_sectors_v1";
+
+// ── STATE ────────────────────────────────────────────────
+let companies = [];
+let currentCo = null;
+let sectorsDB = {};
+
+// ── HELPERS ──────────────────────────────────────────────
+function $(id){ return document.getElementById(id); }
+function loadDB(){ try{ sectorsDB = JSON.parse(localStorage.getItem(DB_KEY)||'{}'); }catch(e){ sectorsDB={}; } }
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(sectorsDB)); }
+
+function csvRow(row){
+  const cols=[]; let cur='', inQ=false;
+  for(let i=0;i<row.length;i++){
+    if(row[i]==='"'){ inQ=!inQ; }
+    else if((row[i]===','||row[i]===';')&&!inQ){ cols.push(cur); cur=''; }
+    else{ cur+=row[i]; }
+  }
+  cols.push(cur);
+  return cols;
+}
+
+function cl(s){ return s.replace(/^["'\s]+|["'\s]+$/g,'').trim(); }
+
+function buildFormsUrl(code, sector){
+  const u = new URL(FORMS_URL);
+  u.searchParams.set('usp','pp_url');
+  if(code)   u.searchParams.set('entry.2021106096', code);
+  if(sector) u.searchParams.set('entry.160469777', sector);
+  return u.toString();
+}
+
+function buildPortalUrl(code, name, sectors){
+  const base = location.origin + location.pathname;
+  let url = base + '?code=' + encodeURIComponent(code);
+  if(name)           url += '&company=' + encodeURIComponent(name);
+  if(sectors.length) url += '&sectors=' + sectors.map(encodeURIComponent).join(',');
+  return url;
+}
+
+// ── INIT ───────────────────────────────────────────────
+loadDB();
+
+// Steps modal
+const STEPS = [
+  {n:'01', t:'Insira o Código', d:'Receba o código de acesso fornecido.'},
+  {n:'02', t:'Escolha o Setor', d:'Selecione seu setor/departamento.'},
+  {n:'03', t:'Questionário COPSOQ II', d:'Responda 41 itens sobre saúde e segurança.'},
+  {n:'04', t:'Envio Confidencial', d:'Suas respostas são anônimas e protegidas.'},
+  {n:'05', t:'Análise Realizada', d:'Resultados são analisados e acompanhados.'},
+];
+$('steps-wrap').innerHTML = STEPS.map((s,i) => `
+  <div style="display:flex;gap:14px">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:white">${s.n}</span></div>
+      ${i<STEPS.length-1?'<div style="width:2px;flex:1;background:var(--border);margin:3px 0"></div>':''}
+    </div>
+    <div style="padding-bottom:${i<STEPS.length-1?'14px':'0'};padding-top:7px">
+      <p style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${s.t}</p>
+      <p style="font-size:12px;color:var(--sub);line-height:1.5">${s.d}</p>
+    </div>
+  </div>`).join('');
+
+// ── MODAL ────────────────────────────────────────────────
+function openModal(id){ $(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id){ $(id).classList.remove('open'); document.body.style.overflow=''; }
+document.querySelectorAll('.modal').forEach(el => el.addEventListener('click', e=>{ if(e.target===el) closeModal(el.id); }));
+
+// ── VALIDATE ─────────────────────────────────────────────
+async function doValidate(){
+  const inp = $('code-inp');
+  const code = inp.value.trim().toUpperCase();
+  $('err-box').classList.add('hidden');
+  if(!code){ showErr('Por favor, insira um código'); shake(inp); return; }
+  setLoad(true);
+  try{
+    const res = await fetch(SHEET_URL);
+    if(!res.ok) throw new Error();
+    const rows = (await res.text()).split(/\r?\n/);
+    companies = rows.map(row=>{
+      const c = csvRow(row);
+      return { name:cl(c[0]||''), code:cl(c[1]||'').toUpperCase(), creation:cl(c[3]||''), exclusion:cl(c[5]||'') };
+    }).filter(r=>r.code && !['ID','CODIGO','CÓDIGO','EMPRESA','CODE'].includes(r.code));
+    const found = companies.find(r=>r.code===code);
+    if(found){ showStep2(found); }
+    else{ showErr('Código não encontrado. Verifique e tente novamente.'); shake(inp); }
+  }catch(e){
+    showErr('Erro de conexão. Verifique sua internet.');
+  }finally{
+    setLoad(false);
+  }
+}
+
+function showStep2(co){
+  currentCo = co;
+  $('co-name').textContent = (co.name||co.code).toUpperCase();
+  $('co-code').textContent  = 'Código: ' + co.code + ' ✓';
+  if(co.creation && co.exclusion){
+    $('period-txt').textContent = 'Coleta: ' + co.creation + ' até ' + co.exclusion;
+    $('period-chip').classList.remove('hidden');
+  }
+  const sectors = sectorsDB[co.code] || [];
+  const secBtns = $('sec-btns');
+  secBtns.innerHTML = '';
+  if(sectors.length > 0){
+    $('sec-lbl').classList.remove('hidden');
+    $('no-sec-msg').classList.add('hidden');
+    sectors.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'sector-btn';
+      b.innerHTML = '<span>' + s + '</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+      b.onclick = () => openForms(s);
+      secBtns.appendChild(b);
+    });
+  } else {
+    $('sec-lbl').classList.add('hidden');
+    $('no-sec-msg').classList.remove('hidden');
+  }
+  $('s1').style.display = 'none';
+  $('s2').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function openForms(sector){
+  if(!currentCo) return;
+  const url = buildFormsUrl(currentCo.code, sector);
+  window.open(url, '_blank');
+}
+
+function goBack(){
+  $('s1').style.display = 'block';
+  $('s2').style.display = 'none';
+  $('period-chip').classList.add('hidden');
+  $('sec-lbl').classList.add('hidden');
+  $('err-box').classList.add('hidden');
+  currentCo = null;
+}
+
+function setLoad(v){
+  $('val-btn').disabled = v;
+  $('btn-lbl').textContent = v ? 'Validando...' : 'Validar e Acessar';
+  $('btn-spin').classList.toggle('hidden', !v);
+}
+
+function showErr(msg){ $('err-txt').textContent=msg; $('err-box').classList.remove('hidden'); }
+function shake(el){ el.style.animation=''; void el.offsetWidth; el.style.animation='shake .4s ease'; setTimeout(()=>el.style.animation='',500); }
+
+// ── INPUT HANDLERS ────────────────────────────────────────
+$('code-inp').addEventListener('keydown', e=>{ if(e.key==='Enter') doValidate(); });
+$('code-inp').addEventListener('input', e=>{
+  const p=e.target.selectionStart;
+  e.target.value=e.target.value.toUpperCase();
+  e.target.setSelectionRange(p,p);
+});
+
+// ── ADMIN ─────────────────────────────────────────────────
+function openAdmin(){ $('adm-ov').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeAdmin(){ $('adm-ov').classList.remove('open'); document.body.style.overflow=''; }
+$('adm-ov').addEventListener('click', e=>{ if(e.target===$('adm-ov')) closeAdmin(); });
+
+function adminLogin(){
+  if($('adm-pass').value === ADM_PASS){
+    $('adm-login').style.display='none';
+    $('adm-panel').classList.remove('hidden');
+    $('adm-logout').classList.remove('hidden');
+    loadCoList();
+    loadSecSelect();
+  } else {
+    $('adm-err').classList.remove('hidden');
+    $('adm-pass').value='';
+    setTimeout(()=>$('adm-err').classList.add('hidden'),3000);
+  }
+}
+$('adm-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') adminLogin(); });
+
+function adminLogout(){
+  $('adm-login').style.display='';
+  $('adm-panel').classList.add('hidden');
+  $('adm-logout').classList.add('hidden');
+  $('adm-pass').value='';
+  closeAdmin();
+}
+
+function switchTab(t){
+  ['qr','sec','co'].forEach(id=>{
+    $('tab-'+id).classList.toggle('on', id===t);
+    document.querySelectorAll('.adm-tab-btn').forEach((btn,i) => btn.classList.toggle('on', i === ['qr','sec','co'].indexOf(t)));
+  });
+}
+
+// ── QR CODE ───────────────────────────────────────────────
+function updateQR(){
+  const code = ($('qr-code').value||'').trim().toUpperCase();
+  const name = ($('qr-name').value||'').trim();
+  const start= ($('qr-start').value||'').trim();
+  const end  = ($('qr-end').value||'').trim();
+
+  $('qr-prev-name').textContent = name || code || '';
+  $('qr-prev-code').textContent = code ? 'CÓDIGO: ' + code : '';
+  const pEl = $('qr-prev-period');
+  if(start&&end){ pEl.textContent='Coleta: '+start+' – '+end; pEl.classList.remove('hidden'); }
+  else pEl.classList.add('hidden');
+
+  const disp = $('qr-display');
+  if(!code){ disp.innerHTML='<div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--slate2);font-size:11px;text-align:center;padding:10px">Digite o código para gerar</div>'; $('link-prev-box').style.display='none'; return; }
+
+  const sectors = sectorsDB[code] || [];
+  const portalUrl = buildPortalUrl(code, name, sectors);
+
+  $('link-prev-box').style.display='block';
+  $('link-prev-url').href = portalUrl;
+  $('link-prev-url').textContent = portalUrl.length>70 ? portalUrl.slice(0,67)+'...' : portalUrl;
+
+  disp.innerHTML='';
+  try{
+    new QRCode(disp, { text:portalUrl, width:160, height:160, colorDark:'#0A1628', colorLight:'#FFFFFF', correctLevel:QRCode.CorrectLevel.H });
+  }catch(e){ disp.innerHTML='<div style="color:var(--red);font-size:11px">Erro ao gerar QR</div>'; }
+}
+
+function downloadPNG(){
+  const code = ($('qr-code').value||'').trim().toUpperCase();
+  const name = ($('qr-name').value||'').trim();
+  const start= ($('qr-start').value||'').trim();
+  const end  = ($('qr-end').value||'').trim();
+  if(!code){ alert('Digite o código primeiro.'); return; }
+  const qrCv = document.querySelector('#qr-display canvas');
+  if(!qrCv){ alert('Gere o QR Code primeiro.'); return; }
+  const sectors = sectorsDB[code]||[];
+  const portalUrl = buildPortalUrl(code, name, sectors);
+  const W=580, H=500+(start&&end?30:0);
+  const cv=$('dl-canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  // BG
+  ctx.fillStyle='#fff'; rr(ctx,0,0,W,H,24); ctx.fill();
+  // Header
+  ctx.save(); ctx.beginPath(); ctx.moveTo(24,0); ctx.lineTo(W-24,0); ctx.quadraticCurveTo(W,0,W,24); ctx.lineTo(W,95); ctx.lineTo(0,95); ctx.lineTo(0,24); ctx.quadraticCurveTo(0,0,24,0); ctx.closePath(); ctx.fillStyle='#6B46C1'; ctx.fill(); ctx.restore();
+  ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font='bold 16px Arial'; ctx.fillText('COPSOQ II — QUESTIONÁRIO DE SAÚDE OCUPACIONAL',W/2,36);
+  ctx.font='12px Arial'; ctx.fillStyle='rgba(255,255,255,.75)'; ctx.fillText('41 Itens · Versão Curta',W/2,62);
+  // QR
+  const qs=200,qx=(W-qs)/2,qy=108;
+  ctx.shadowColor='rgba(0,0,0,.1)'; ctx.shadowBlur=14; ctx.drawImage(qrCv,qx,qy,qs,qs); ctx.shadowColor='transparent'; ctx.shadowBlur=0;
+  let y=qy+qs+28;
+  ctx.fillStyle='#0A1628'; ctx.font='bold 20px Arial'; ctx.fillText('EMPRESA: '+(name||code).toUpperCase(),W/2,y); y+=24;
+  ctx.font='bold 12px Arial'; ctx.fillStyle='#6B46C1'; ctx.fillText('CÓDIGO: '+code,W/2,y); y+=22;
+  if(start&&end){
+    const t='COLETA: '+start+' ATÉ '+end;
+    ctx.font='bold 11px Arial'; const tw=ctx.measureText(t).width;
+    const ph=28,pw=tw+40,px=(W-pw)/2;
+    ctx.fillStyle='#FFF7ED'; rr(ctx,px,y,pw,ph,13); ctx.fill();
+    ctx.strokeStyle='#FED7AA'; ctx.lineWidth=1.5; rr(ctx,px,y,pw,ph,13); ctx.stroke();
+    ctx.fillStyle='#92400E'; ctx.fillText(t,W/2,y+ph/2+3); y+=ph+6;
+  }
+  y+=8; ctx.font='10px Arial'; ctx.fillStyle='#94A3B8'; ctx.fillText('Acesse pelo navegador:',W/2,y); y+=16;
+  ctx.font='bold 11px Arial'; const lw=ctx.measureText(portalUrl).width;
+  const lph=30,lpw=Math.min(lw+40,W-40),lpx=(W-lpw)/2;
+  ctx.fillStyle='#F3E8FF'; rr(ctx,lpx,y,lpw,lph,10); ctx.fill();
+  ctx.strokeStyle='#D8B4FE'; ctx.lineWidth=1.5; rr(ctx,lpx,y,lpw,lph,10); ctx.stroke();
+  ctx.fillStyle='#6B46C1';
+  let ld=portalUrl; while(ctx.measureText(ld).width>lpw-20&&ld.length>8) ld=ld.slice(0,-1);
+  if(ld!==portalUrl) ld+='...';
+  ctx.fillText(ld,W/2,y+lph/2+3); y+=lph+14;
+  ctx.fillStyle='#CBD5E1'; ctx.font='10px Arial'; ctx.fillText('Portal de Saúde Ocupacional · COPSOQ II',W/2,y);
+  const a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download='QR-COPSOQ-'+(name||code)+'.png'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+
+function downloadPDF(){
+  const code = ($('qr-code').value||'').trim().toUpperCase();
+  const name = ($('qr-name').value||'').trim();
+  const start= ($('qr-start').value||'').trim();
+  const end  = ($('qr-end').value||'').trim();
+  if(!code){ alert('Digite o código primeiro.'); return; }
+  const qrCv = document.querySelector('#qr-display canvas');
+  if(!qrCv){ alert('Gere o QR Code primeiro.'); return; }
+  const sectors = sectorsDB[code]||[];
+  const portalUrl = buildPortalUrl(code, name, sectors);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210, mg=20, cW=W-mg*2;
+  let y=0;
+  doc.setFillColor(107,70,193); doc.roundedRect(mg,15,cW,28,4,4,'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('COPSOQ II — QUESTIONÁRIO DE SAÚDE OCUPACIONAL',W/2,26,{align:'center'});
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(200,215,255);
+  doc.text('41 Itens · Versão Curta',W/2,34,{align:'center'});
+  doc.setFillColor(255,255,255); doc.setDrawColor(226,232,240); doc.setLineWidth(0.3);
+  doc.roundedRect(mg,47,cW,190+(start&&end?14:0),6,6,'FD');
+  const qi=qrCv.toDataURL('image/png'); const qs=65,qx=(W-qs)/2; y=57;
+  doc.addImage(qi,'PNG',qx,y,qs,qs); y+=qs+10;
+  doc.setTextColor(10,22,40); doc.setFont('helvetica','bold'); doc.setFontSize(17);
+  doc.text('EMPRESA: '+(name||code).toUpperCase(),W/2,y,{align:'center'}); y+=8;
+  doc.setFontSize(11); doc.setTextColor(107,70,193);
+  doc.text('CÓDIGO: '+code,W/2,y,{align:'center'}); y+=8;
+  if(start&&end){
+    const t='COLETA: '+start+' ATÉ '+end;
+    const bW=100,bH=10,bX=(W-bW)/2;
+    doc.setFillColor(255,247,237); doc.setDrawColor(254,215,170); doc.roundedRect(bX,y,bW,bH,3,3,'FD');
+    doc.setTextColor(146,64,14); doc.setFontSize(9); doc.setFont('helvetica','bold');
+    doc.text(t,W/2,y+6.5,{align:'center'}); y+=bH+6;
+  }
+  doc.setDrawColor(226,232,240); doc.setLineWidth(0.3); doc.line(mg+8,y,W-mg-8,y); y+=7;
+  doc.setTextColor(148,163,184); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text('Toque no link abaixo para acessar o questionário:',W/2,y,{align:'center'}); y+=6;
+  const lW=cW-16,lH=14,lX=mg+8;
+  doc.setFillColor(243,232,255); doc.setDrawColor(216,180,254); doc.setLineWidth(0.5);
+  doc.roundedRect(lX,y,lW,lH,3,3,'FD');
+  doc.setTextColor(107,70,193); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  const ld=portalUrl.length>95?portalUrl.slice(0,92)+'...':portalUrl;
+  doc.text(ld,W/2,y+8.5,{align:'center'});
+  doc.link(lX,y,lW,lH,{url:portalUrl}); y+=lH+4;
+  doc.setFillColor(248,250,252); doc.setDrawColor(226,232,240);
+  doc.roundedRect(mg,y,cW,9,3,3,'FD');
+  doc.setTextColor(148,163,184); doc.setFontSize(7);
+  doc.text('Portal de Saúde Ocupacional · COPSOQ II',W/2,y+6,{align:'center'});
+  doc.save('QR-COPSOQ-'+(name||code)+'.pdf');
+}
+
+// ── SECTORS ───────────────────────────────────────────────
+function loadSecSelect(){
+  const sel=$('sec-co-sel');
+  sel.innerHTML='<option value="">Selecione a empresa...</option>';
+  if(companies.length===0){
+    fetch(SHEET_URL).then(r=>r.text()).then(csv=>{
+      companies=csv.split(/\r?\n/).map(row=>{ const c=csvRow(row); return {name:cl(c[0]||''),code:cl(c[1]||'').toUpperCase()}; }).filter(r=>r.code&&!['ID','CODIGO','CÓDIGO','EMPRESA','CODE'].includes(r.code));
+      fillSecSel();
+    }).catch(()=>{ sel.innerHTML='<option value="">Erro ao carregar</option>'; });
+  } else { fillSecSel(); }
+}
+
+function fillSecSel(){
+  const sel=$('sec-co-sel');
+  sel.innerHTML='<option value="">Selecione a empresa...</option>';
+  companies.forEach(c=>{ const o=document.createElement('option'); o.value=c.code; o.textContent=c.code+(c.name?' — '+c.name:''); sel.appendChild(o); });
+}
+
+function loadSecCompany(){
+  const code=$('sec-co-sel').value;
+  if(!code){ $('sec-panel').style.display='none'; $('sec-empty-msg').style.display=''; return; }
+  $('sec-panel').style.display='block'; $('sec-empty-msg').style.display='none';
+  const co=companies.find(c=>c.code===code);
+  $('sec-co-lbl').textContent=co?(co.name||co.code):code;
+  renderSecList(code);
+}
+
+function renderSecList(code){
+  const secs=sectorsDB[code]||[];
+  const list=$('sec-list');
+  if(!secs.length){ list.innerHTML='<div style="background:#F3E8FF;border:1.5px solid #E9D5FF;border-radius:10px;padding:10px;font-size:12px;color:#6B46C1;text-align:center">Nenhum setor. Adicione abaixo.</div>'; return; }
+  list.innerHTML=secs.map((s,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;background:var(--off);padding:10px 12px;border-radius:8px;margin-bottom:6px"><span style="font-weight:600">${s}</span><button style="border:none;background:var(--red);color:white;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:600" onclick="delSector(${i})">Deletar</button></div>`).join('');
+}
+
+function addSector(){
+  const code=$('sec-co-sel').value; if(!code) return;
+  const val=$('new-sec').value.trim().toUpperCase(); if(!val) return;
+  if(!sectorsDB[code]) sectorsDB[code]=[];
+  if(!sectorsDB[code].includes(val)){ sectorsDB[code].push(val); renderSecList(code); }
+  $('new-sec').value=''; $('new-sec').focus();
+}
+
+function delSector(i){
+  const code=$('sec-co-sel').value; if(!code) return;
+  sectorsDB[code].splice(i,1); renderSecList(code);
+}
+
+function clearSectors(){
+  const code=$('sec-co-sel').value; if(!code) return;
+  if(!confirm('Remover TODOS os setores?')) return;
+  sectorsDB[code]=[]; renderSecList(code);
+}
+
+function saveSectors(){
+  saveDB(); updateQR();
+  const b=document.createElement('div'); b.className='banner ok'; b.textContent='✓ Setores salvos!';
+  document.body.appendChild(b); setTimeout(()=>b.remove(),2800);
+}
+
+// ── COMPANY LIST ──────────────────────────────────────────
+async function loadCoList(){
+  const wrap=$('co-list-wrap');
+  try{
+    const res=await fetch(SHEET_URL);
+    if(!res.ok) throw new Error();
+    const rows=(await res.text()).split(/\r?\n/);
+    companies=rows.map(row=>{ const c=csvRow(row); return {name:cl(c[0]||''),code:cl(c[1]||'').toUpperCase(),creation:cl(c[3]||''),exclusion:cl(c[5]||'')}; }).filter(r=>r.code&&!['ID','CODIGO','CÓDIGO','EMPRESA','CODE'].includes(r.code));
+    fillSecSel();
+    if(!companies.length){ wrap.innerHTML='<div style="font-size:12px;color:var(--slate)">Nenhum código encontrado.</div>'; return; }
+    const today=new Date();
+    wrap.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+companies.map(c=>{
+      let on=true;
+      if(c.exclusion){ const p=c.exclusion.split(/[\/\-]/); if(p.length===3){ let yr=parseInt(p[2]); if(yr<100)yr+=2000; on=new Date(yr,parseInt(p[1])-1,parseInt(p[0]))>=today; } }
+      const sc=(sectorsDB[c.code]||[]).length;
+      return `<div style="display:flex;align-items:center;gap:12px;background:var(--off);padding:12px;border-radius:10px"><div style="width:12px;height:12px;border-radius:50%;background:${on?'var(--green)':'var(--red)'};flex-shrink:0"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${c.code}</div>${c.name?'<div style="font-size:11px;color:var(--slate)">'+c.name+'</div>':''}<div style="font-size:10px;color:var(--slate2);margin-top:3px">${c.creation||'—'} → ${c.exclusion||'—'} • ${sc} setor(es)</div></div></div>`;
+    }).join('')+'</div><p style="font-size:11px;color:var(--slate);margin-top:10px;text-align:right">'+companies.length+' código(s)</p>';
+  }catch(e){ wrap.innerHTML='<div style="background:#FFF1F1;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 13px;font-size:12px;color:#991B1B">Erro ao carregar planilha.</div>'; }
+}
+
+// ── INIT FROM URL ───────────────────────────────────────────
+(function(){
+  const p = new URLSearchParams(location.search);
+  const code    = (p.get('code')||'').trim().toUpperCase();
+  const company = p.get('company')||'';
+  const sectors = p.get('sectors')||'';
+
+  if(!code) { if(p.get('admin')==='true') openAdmin(); return; }
+
+  $('code-inp').value = code;
+
+  const secList = sectors
+    ? sectors.split(',').map(s=>decodeURIComponent(s).trim()).filter(Boolean)
+    : [];
+
+  if(secList.length > 0){
+    sectorsDB[code] = secList;
+    saveDB();
+    const co = {
+      code: code,
+      name: company ? decodeURIComponent(company) : code,
+      creation: '', exclusion: ''
+    };
+    showStep2(co);
+    fetch(SHEET_URL).then(r=>r.text()).then(csv=>{
+      const rows=csv.split(/\r?\n/);
+      const found=rows.map(row=>{ const c=csvRow(row); return {name:cl(c[0]||''),code:cl(c[1]||'').toUpperCase(),creation:cl(c[3]||''),exclusion:cl(c[5]||'')}; }).find(r=>r.code===code);
+      if(found){
+        if(found.name) $('co-name').textContent=found.name.toUpperCase();
+        if(found.creation&&found.exclusion){
+          $('period-txt').textContent='Coleta: '+found.creation+' até '+found.exclusion;
+          $('period-chip').classList.remove('hidden');
+        }
+      }
+    }).catch(()=>{});
+  } else {
+    doValidate();
+  }
+
+  if(p.get('admin')==='true') openAdmin();
+})();
+</script>
+<style>
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+</style>
+</body>
+</html>
