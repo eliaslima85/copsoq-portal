@@ -477,7 +477,7 @@ function buildFormsUrl(code, sector){
   const u = new URL(FORMS_URL);
   u.searchParams.set('usp','pp_url');
   if(code)   u.searchParams.set('entry.2021106096', code);
-  if(sector) u.searchParams.set('entry.160469777', sector);
+  if(sector) u.searchParams.set('entry.1048242008', sector);
   return u.toString();
 }
 
@@ -646,10 +646,20 @@ function updateQR(){
   const start= ($('qr-start').value||'').trim();
   const end  = ($('qr-end').value||'').trim();
 
+  // Converter datas de YYYY-MM-DD para DD/MM/YYYY
+  const formatDate = (dateStr) => {
+    if(!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const startFormatted = formatDate(start);
+  const endFormatted = formatDate(end);
+
   $('qr-prev-name').textContent = name || code || '';
   $('qr-prev-code').textContent = code ? 'CÓDIGO: ' + code : '';
   const pEl = $('qr-prev-period');
-  if(start&&end){ pEl.textContent='Coleta: '+start+' – '+end; pEl.classList.remove('hidden'); }
+  if(startFormatted&&endFormatted){ pEl.textContent='Coleta: '+startFormatted+' – '+endFormatted; pEl.classList.remove('hidden'); }
   else pEl.classList.add('hidden');
 
   const disp = $('qr-display');
@@ -676,9 +686,19 @@ function downloadPNG(){
   if(!code){ alert('Digite o código primeiro.'); return; }
   const qrCv = document.querySelector('#qr-display canvas');
   if(!qrCv){ alert('Gere o QR Code primeiro.'); return; }
+  
+  // Converter datas
+  const formatDate = (dateStr) => {
+    if(!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+  const startFormatted = formatDate(start);
+  const endFormatted = formatDate(end);
+  
   const sectors = sectorsDB[code]||[];
   const portalUrl = buildPortalUrl(code, name, sectors);
-  const W=580, H=500+(start&&end?30:0);
+  const W=580, H=500+(startFormatted&&endFormatted?30:0);
   const cv=$('dl-canvas'); cv.width=W; cv.height=H;
   const ctx=cv.getContext('2d');
   // BG
@@ -694,8 +714,8 @@ function downloadPNG(){
   let y=qy+qs+28;
   ctx.fillStyle='#0A1628'; ctx.font='bold 20px Arial'; ctx.fillText('EMPRESA: '+(name||code).toUpperCase(),W/2,y); y+=24;
   ctx.font='bold 12px Arial'; ctx.fillStyle='#6B46C1'; ctx.fillText('CÓDIGO: '+code,W/2,y); y+=22;
-  if(start&&end){
-    const t='COLETA: '+start+' ATÉ '+end;
+  if(startFormatted&&endFormatted){
+    const t='COLETA: '+startFormatted+' ATÉ '+endFormatted;
     ctx.font='bold 11px Arial'; const tw=ctx.measureText(t).width;
     const ph=28,pw=tw+40,px=(W-pw)/2;
     ctx.fillStyle='#FFF7ED'; rr(ctx,px,y,pw,ph,13); ctx.fill();
@@ -725,6 +745,16 @@ function downloadPDF(){
   if(!code){ alert('Digite o código primeiro.'); return; }
   const qrCv = document.querySelector('#qr-display canvas');
   if(!qrCv){ alert('Gere o QR Code primeiro.'); return; }
+  
+  // Converter datas
+  const formatDate = (dateStr) => {
+    if(!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+  const startFormatted = formatDate(start);
+  const endFormatted = formatDate(end);
+  
   const sectors = sectorsDB[code]||[];
   const portalUrl = buildPortalUrl(code, name, sectors);
   const { jsPDF } = window.jspdf;
@@ -737,15 +767,15 @@ function downloadPDF(){
   doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(200,215,255);
   doc.text('41 Itens · Versão Curta',W/2,34,{align:'center'});
   doc.setFillColor(255,255,255); doc.setDrawColor(226,232,240); doc.setLineWidth(0.3);
-  doc.roundedRect(mg,47,cW,190+(start&&end?14:0),6,6,'FD');
+  doc.roundedRect(mg,47,cW,190+(startFormatted&&endFormatted?14:0),6,6,'FD');
   const qi=qrCv.toDataURL('image/png'); const qs=65,qx=(W-qs)/2; y=57;
   doc.addImage(qi,'PNG',qx,y,qs,qs); y+=qs+10;
   doc.setTextColor(10,22,40); doc.setFont('helvetica','bold'); doc.setFontSize(17);
   doc.text('EMPRESA: '+(name||code).toUpperCase(),W/2,y,{align:'center'}); y+=8;
   doc.setFontSize(11); doc.setTextColor(107,70,193);
   doc.text('CÓDIGO: '+code,W/2,y,{align:'center'}); y+=8;
-  if(start&&end){
-    const t='COLETA: '+start+' ATÉ '+end;
+  if(startFormatted&&endFormatted){
+    const t='COLETA: '+startFormatted+' ATÉ '+endFormatted;
     const bW=100,bH=10,bX=(W-bW)/2;
     doc.setFillColor(255,247,237); doc.setDrawColor(254,215,170); doc.roundedRect(bX,y,bW,bH,3,3,'FD');
     doc.setTextColor(146,64,14); doc.setFontSize(9); doc.setFont('helvetica','bold');
