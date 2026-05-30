@@ -356,6 +356,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <button class="adm-tab-btn on" onclick="switchTab('qr')">Gerar QR Code</button>
           <button class="adm-tab-btn" onclick="switchTab('sec')">Setores</button>
           <button class="adm-tab-btn" onclick="switchTab('co')">Empresas</button>
+          <button class="adm-tab-btn" onclick="switchTab('pw')">Senha</button>
         </div>
 
         <!-- TAB QR CODE -->
@@ -430,6 +431,24 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
         </div>
 
+        <!-- TAB SENHA -->
+        <div class="adm-tab-ct" id="tab-pw">
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Senha Atual</label>
+            <input class="adm-inp" type="password" id="pw-current" placeholder="Digite a senha atual"/>
+          </div>
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Nova Senha</label>
+            <input class="adm-inp" type="password" id="pw-new" placeholder="Digite a nova senha"/>
+          </div>
+          <div class="adm-form-gp">
+            <label class="adm-lbl">Confirmar Nova Senha</label>
+            <input class="adm-inp" type="password" id="pw-confirm" placeholder="Repita a nova senha"/>
+          </div>
+          <div id="pw-msg" class="hidden" style="font-size:13px;padding:8px 12px;border-radius:8px;margin-bottom:8px;text-align:center"></div>
+          <button class="adm-btn" onclick="changePassword()" style="width:100%;padding:12px">Alterar Senha</button>
+        </div>
+
         <button class="adm-btn" onclick="adminLogout()" style="width:100%;padding:12px;margin-top:1.4rem;background:var(--slate)">Sair</button>
       </div>
     </div>
@@ -447,7 +466,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/1SO_sz_Pw8zpyebuLrRBCGyyJ1Syr_hrRhBIEI2rlGmM/export?format=csv&gid=1502619663";
 const FORMS_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdaXECEGnJ5QffHIoB3nGj1a0NuYHloAb-65oQrJYemcPdM5Q/viewform?usp=pp_url&entry.2021106096=TESTE&entry.1048242008=TESTE";
 const RESPONSES_SHEET = "https://docs.google.com/spreadsheets/d/1Y3QjXYvaAAxyb7Ru3aW5eqDjAKICinCDbvvXfwg6eo8/export?format=csv&gid=1149067465";
-const ADM_PASS  = "ellsf@151281035900!@#$%rebecabela503<>:^?`}{<<<<\"$&¨%@";
+const ADM_PASS_DEFAULT = "ellsf@151281035900!@#$%rebecabela503<>:^?`}{<<<<\"$&¨%@";
+const ADM_PASS_KEY = "copsoq_adm_pass_v1";
+function getAdmPass(){ return localStorage.getItem(ADM_PASS_KEY) || ADM_PASS_DEFAULT; }
 const DB_KEY    = "copsoq_sectors_v1";
 
 // ── STATE ────────────────────────────────────────────────
@@ -457,7 +478,18 @@ let sectorsDB = {};
 
 // ── HELPERS ──────────────────────────────────────────────
 function $(id){ return document.getElementById(id); }
-function loadDB(){ try{ sectorsDB = JSON.parse(localStorage.getItem(DB_KEY)||'{}'); }catch(e){ sectorsDB={}; } }
+function loadDB(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(DB_KEY)||'{}');
+    // normaliza chaves: remove espaços e converte para maiúsculas
+    sectorsDB = {};
+    Object.keys(raw).forEach(k=>{
+      const nk = k.trim().toUpperCase();
+      if(!sectorsDB[nk]) sectorsDB[nk] = [];
+      sectorsDB[nk] = sectorsDB[nk].concat(raw[k].filter(s=>!sectorsDB[nk].includes(s)));
+    });
+  }catch(e){ sectorsDB={}; }
+}
 function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(sectorsDB)); }
 
 function csvRow(row){
@@ -610,7 +642,7 @@ function closeAdmin(){ $('adm-ov').classList.remove('open'); document.body.style
 $('adm-ov').addEventListener('click', e=>{ if(e.target===$('adm-ov')) closeAdmin(); });
 
 function adminLogin(){
-  if($('adm-pass').value === ADM_PASS){
+  if($('adm-pass').value === getAdmPass()){
     $('adm-login').style.display='none';
     $('adm-panel').classList.remove('hidden');
     $('adm-logout').classList.remove('hidden');
@@ -633,10 +665,34 @@ function adminLogout(){
 }
 
 function switchTab(t){
-  ['qr','sec','co'].forEach(id=>{
-    $('tab-'+id).classList.toggle('on', id===t);
-    document.querySelectorAll('.adm-tab-btn').forEach((btn,i) => btn.classList.toggle('on', i === ['qr','sec','co'].indexOf(t)));
-  });
+  const tabs = ['qr','sec','co','pw'];
+  tabs.forEach(id=>{ $('tab-'+id).classList.toggle('on', id===t); });
+  document.querySelectorAll('.adm-tab-btn').forEach((btn,i) => btn.classList.toggle('on', i === tabs.indexOf(t)));
+  if(t==='pw'){ $('pw-current').value=''; $('pw-new').value=''; $('pw-confirm').value=''; $('pw-msg').classList.add('hidden'); }
+}
+
+function changePassword(){
+  const cur  = $('pw-current').value;
+  const nw   = $('pw-new').value.trim();
+  const conf = $('pw-confirm').value.trim();
+  const msg  = $('pw-msg');
+
+  function showMsg(text, ok){
+    msg.textContent = text;
+    msg.style.background = ok ? '#d1fae5' : '#fee2e2';
+    msg.style.color = ok ? '#065f46' : '#991b1b';
+    msg.classList.remove('hidden');
+    setTimeout(()=>msg.classList.add('hidden'), 4000);
+  }
+
+  if(cur !== getAdmPass()){ showMsg('Senha atual incorreta.', false); $('pw-current').value=''; return; }
+  if(!nw){ showMsg('A nova senha não pode estar vazia.', false); return; }
+  if(nw !== conf){ showMsg('As senhas não coincidem.', false); $('pw-confirm').value=''; return; }
+  if(nw === cur){ showMsg('A nova senha deve ser diferente da atual.', false); return; }
+
+  localStorage.setItem(ADM_PASS_KEY, nw);
+  $('pw-current').value=''; $('pw-new').value=''; $('pw-confirm').value='';
+  showMsg('Senha alterada com sucesso!', true);
 }
 
 // ── QR CODE ───────────────────────────────────────────────
@@ -863,6 +919,7 @@ function saveSectors(){
 
 // ── COMPANY LIST ──────────────────────────────────────────
 async function loadCoList(){
+  loadDB();
   const wrap=$('co-list-wrap');
   try{
     const res=await fetch(SHEET_URL);
@@ -875,8 +932,10 @@ async function loadCoList(){
     wrap.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+companies.map(c=>{
       let on=true;
       if(c.exclusion){ const p=c.exclusion.split(/[\/\-]/); if(p.length===3){ let yr=parseInt(p[2]); if(yr<100)yr+=2000; on=new Date(yr,parseInt(p[1])-1,parseInt(p[0]))>=today; } }
-      const sc=(sectorsDB[c.code]||[]).length;
-      return `<div style="display:flex;align-items:center;gap:12px;background:var(--off);padding:12px;border-radius:10px"><div style="width:12px;height:12px;border-radius:50%;background:${on?'var(--green)':'var(--red)'};flex-shrink:0"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${c.code}</div>${c.name?'<div style="font-size:11px;color:var(--slate)">'+c.name+'</div>':''}<div style="font-size:10px;color:var(--slate2);margin-top:3px">${c.creation||'—'} → ${c.exclusion||'—'} • ${sc} setor(es)</div></div></div>`;
+      const secs=(sectorsDB[c.code]||[]);
+      const sc=secs.length;
+      const secsHtml=sc>0?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${secs.map(s=>`<span style="background:var(--purple-pale);color:var(--purple);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${s}</span>`).join('')}</div>`:'';
+      return `<div style="background:var(--off);padding:12px;border-radius:10px"><div style="display:flex;align-items:center;gap:12px"><div style="width:12px;height:12px;border-radius:50%;background:${on?'var(--green)':'var(--red)'};flex-shrink:0"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${c.code}</div>${c.name?'<div style="font-size:11px;color:var(--slate)">'+c.name+'</div>':''}<div style="font-size:10px;color:var(--slate2);margin-top:3px">${c.creation||'—'} → ${c.exclusion||'—'} • ${sc} setor(es)</div></div></div>${secsHtml}</div>`;
     }).join('')+'</div><p style="font-size:11px;color:var(--slate);margin-top:10px;text-align:right">'+companies.length+' código(s)</p>';
   }catch(e){ 
     wrap.innerHTML='<div style="background:#FFF1F1;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 13px;font-size:12px;color:#991B1B">Erro ao carregar. Verifique se a planilha está compartilhada publicamente.</div>'; 
