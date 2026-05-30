@@ -908,6 +908,7 @@ function saveSectors(){
 
 // ── COMPANY LIST ──────────────────────────────────────────
 async function loadCoList(){
+  loadDB();
   const wrap=$('co-list-wrap');
   try{
     const res=await fetch(SHEET_URL);
