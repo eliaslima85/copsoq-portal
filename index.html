@@ -921,8 +921,10 @@ async function loadCoList(){
     wrap.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+companies.map(c=>{
       let on=true;
       if(c.exclusion){ const p=c.exclusion.split(/[\/\-]/); if(p.length===3){ let yr=parseInt(p[2]); if(yr<100)yr+=2000; on=new Date(yr,parseInt(p[1])-1,parseInt(p[0]))>=today; } }
-      const sc=(sectorsDB[c.code]||[]).length;
-      return `<div style="display:flex;align-items:center;gap:12px;background:var(--off);padding:12px;border-radius:10px"><div style="width:12px;height:12px;border-radius:50%;background:${on?'var(--green)':'var(--red)'};flex-shrink:0"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${c.code}</div>${c.name?'<div style="font-size:11px;color:var(--slate)">'+c.name+'</div>':''}<div style="font-size:10px;color:var(--slate2);margin-top:3px">${c.creation||'—'} → ${c.exclusion||'—'} • ${sc} setor(es)</div></div></div>`;
+      const secs=(sectorsDB[c.code]||[]);
+      const sc=secs.length;
+      const secsHtml=sc>0?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${secs.map(s=>`<span style="background:var(--purple-pale);color:var(--purple);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${s}</span>`).join('')}</div>`:'';
+      return `<div style="background:var(--off);padding:12px;border-radius:10px"><div style="display:flex;align-items:center;gap:12px"><div style="width:12px;height:12px;border-radius:50%;background:${on?'var(--green)':'var(--red)'};flex-shrink:0"></div><div style="flex:1"><div style="font-weight:600;font-size:13px">${c.code}</div>${c.name?'<div style="font-size:11px;color:var(--slate)">'+c.name+'</div>':''}<div style="font-size:10px;color:var(--slate2);margin-top:3px">${c.creation||'—'} → ${c.exclusion||'—'} • ${sc} setor(es)</div></div></div>${secsHtml}</div>`;
     }).join('')+'</div><p style="font-size:11px;color:var(--slate);margin-top:10px;text-align:right">'+companies.length+' código(s)</p>';
   }catch(e){ 
     wrap.innerHTML='<div style="background:#FFF1F1;border:1.5px solid #FCA5A5;border-radius:10px;padding:10px 13px;font-size:12px;color:#991B1B">Erro ao carregar. Verifique se a planilha está compartilhada publicamente.</div>'; 
