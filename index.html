@@ -478,7 +478,18 @@ let sectorsDB = {};
 
 // ── HELPERS ──────────────────────────────────────────────
 function $(id){ return document.getElementById(id); }
-function loadDB(){ try{ sectorsDB = JSON.parse(localStorage.getItem(DB_KEY)||'{}'); }catch(e){ sectorsDB={}; } }
+function loadDB(){
+  try{
+    const raw = JSON.parse(localStorage.getItem(DB_KEY)||'{}');
+    // normaliza chaves: remove espaços e converte para maiúsculas
+    sectorsDB = {};
+    Object.keys(raw).forEach(k=>{
+      const nk = k.trim().toUpperCase();
+      if(!sectorsDB[nk]) sectorsDB[nk] = [];
+      sectorsDB[nk] = sectorsDB[nk].concat(raw[k].filter(s=>!sectorsDB[nk].includes(s)));
+    });
+  }catch(e){ sectorsDB={}; }
+}
 function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(sectorsDB)); }
 
 function csvRow(row){
